@@ -1,0 +1,52 @@
+---
+# tasks file for roles/ubuntu-es
+- name: install vsftpd ubuntu
+  apt:
+    name: vsftpd
+    state: latest
+    update_cache: yes
+
+- name: disable firewall
+  service:
+    name: ufw
+    state: stopped
+    enabled: no
+
+- name: create ftp user
+  user:
+    name: rinon
+    password: $Zt5WaLpqV74NrxDN5FAGsjQ0RmTjK9ryqlirWvHFszjIUKlPgJlwS0m 
+    comment: "FTP user successfully created"
+
+- name: add deny user
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    line: "DenyUser rinon"
+  register: ssh_config
+
+- name: create ftp dir
+  file:
+    path: /home/rinon/ftp
+    state: directory
+    owner: rinon
+    group: rinon
+    mode: '0555'
+
+- name: create ftp files
+  file:
+    path: /home/rinon/ftp/files
+    state: directory
+    owner: rinon
+    group: rinon
+
+- name: copy vsftpd.config
+  copy:
+    src: vsftpd.conf
+    dest: /etc/vsftpd.conf
+  register: vsftpd_config
+
+- name: restart vsftpd.config
+  service:
+    name: vsftpd
+    state: restarted
+  when: vsftpd_config.changed
